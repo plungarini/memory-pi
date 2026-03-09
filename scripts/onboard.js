@@ -164,10 +164,11 @@ async function onboard() {
 			console.log('🥧 Raspberry Pi (ARM64) detected. Ensuring vector extension is installed...');
 			try {
 				execSync('npm run setup:vec', { stdio: 'inherit' });
+				console.log('✅ Vector extension ready.');
 			} catch (e) {
-				console.warn(
-					'⚠️  Non-critical: Automatic vector extension setup failed. You might need to run it manually: npm run setup:vec',
-				);
+				console.error('❌ Vector extension setup failed. memory-pi cannot start without it.');
+				console.error('   Try manually: npm run setup:vec');
+				process.exit(1);
 			}
 		}
 
