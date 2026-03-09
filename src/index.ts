@@ -43,11 +43,30 @@ fastify.setNotFoundHandler((req, reply) => {
 });
 
 // Graceful shutdown
+let cronTask: { stop: () => void } | null = null;
+
 const shutdown = async () => {
 	logger.info('Shutting down memory-pi...');
-	await fastify.close();
-	await logger.close();
-	process.exit(0);
+
+	// Safety timeout to force exit
+	const forceExit = setTimeout(() => {
+		logger.warn('Graceful shutdown timed out, forcing exit.');
+		process.exit(1);
+	}, 10000);
+
+	try {
+		if (cronTask) {
+			cronTask.stop();
+			logger.debug('Stopped background cron job.');
+		}
+		await fastify.close();
+		await logger.close();
+		clearTimeout(forceExit);
+		process.exit(0);
+	} catch (err) {
+		logger.error('Error during shutdown:', err);
+		process.exit(1);
+	}
 };
 
 process.on('SIGINT', shutdown);
@@ -56,7 +75,7 @@ process.on('SIGTERM', shutdown);
 const start = async () => {
 	try {
 		// Setup background tasks
-		setupExpiryCron();
+		cronTask = setupExpiryCron();
 
 		await fastify.listen({ port: config.PORT, host: '0.0.0.0' });
 		logger.info(`memory-pi running on port ${config.PORT}`);

@@ -22,6 +22,25 @@ function checkPort(portNum) {
 	});
 }
 
+let child = null;
+
+const shutdown = (signal) => {
+	if (child) {
+		console.log(`[${serviceName.toUpperCase()}] terminating child...`);
+		if (process.platform === 'win32') {
+			// On Windows, taskkill /T /F ensures the shell AND the actual service die
+			spawn('taskkill', ['/F', '/T', '/PID', child.pid], { stdio: 'inherit' });
+		} else {
+			child.kill(signal);
+		}
+	}
+	// Exit parent immediately to avoid stalling concurrently
+	process.exit(0);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
 try {
 	const isRunning = await checkPort(port);
 
@@ -33,7 +52,7 @@ try {
 		});
 	} else {
 		console.log(`🚀 [${serviceName.toUpperCase()}] starting on port ${port}...`);
-		const child = spawn(cmd, { shell: true, stdio: 'inherit' });
+		child = spawn(cmd, { shell: true, stdio: 'inherit' });
 
 		child.on('exit', (code) => {
 			console.log(`[${serviceName.toUpperCase()}] process exited with code ${code}`);
