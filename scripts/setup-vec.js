@@ -138,9 +138,13 @@ function tryCompileFromSource(version) {
 		if (!fs.existsSync(srcFile)) throw new Error('sqlite-vec.c not found in amalgamation');
 
 		const compiledSo = path.join(buildDir, 'vec0.so');
+		const srcDir = path.dirname(srcFile);
 		console.log(`  Compiling ${srcFile}...`);
+		// -I srcDir ensures gcc can find sqlite3ext.h bundled in the amalgamation
 		// -DSQLITE_VEC_ENABLE_NEON enables ARM NEON SIMD optimisations
-		execSync(`gcc -O2 -fPIC -shared -DSQLITE_VEC_ENABLE_NEON "${srcFile}" -o "${compiledSo}"`, { stdio: 'inherit' });
+		execSync(`gcc -O2 -fPIC -shared -I "${srcDir}" -DSQLITE_VEC_ENABLE_NEON "${srcFile}" -o "${compiledSo}"`, {
+			stdio: 'inherit',
+		});
 
 		installSo(compiledSo, version);
 		cleanup(tarball, buildDir);
