@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import { config } from '../config.js';
 
 const require = createRequire(import.meta.url);
@@ -37,6 +38,9 @@ try {
     `);
 } catch (e: any) {
 	console.error(`❌ Failed to load sqlite-vec: ${e.message}`);
+	if (os.platform() === 'linux' && os.arch() === 'arm64') {
+		console.error('💡 TIP: If you are on Raspberry Pi, please run: npm run setup:vec');
+	}
 	process.exit(1);
 }
 

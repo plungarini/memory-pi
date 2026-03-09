@@ -158,6 +158,19 @@ async function onboard() {
 	console.log('\n📦 Installing project dependencies...');
 	try {
 		execSync('npm install', { stdio: 'inherit' });
+
+		// Raspberry Pi (ARM64) specific vector extension check
+		if (os.platform() === 'linux' && os.arch() === 'arm64') {
+			console.log('🥧 Raspberry Pi (ARM64) detected. Ensuring vector extension is installed...');
+			try {
+				execSync('npm run setup:vec', { stdio: 'inherit' });
+			} catch (e) {
+				console.warn(
+					'⚠️  Non-critical: Automatic vector extension setup failed. You might need to run it manually: npm run setup:vec',
+				);
+			}
+		}
+
 		console.log('✅ Dependencies installed.');
 	} catch (e) {
 		console.error('❌ Dependency installation failed:', e instanceof Error ? e.message : String(e));
