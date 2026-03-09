@@ -30,7 +30,7 @@ const SearchPage: React.FC = () => {
 					Search Memorable Moments
 				</h2>
 				<p className="text-slate-400 max-w-2xl mx-auto md:mx-0">
-					Semantic search powered by Ollama & ChromaDB. Find anything by meaning, not just keywords.
+					Semantic search powered by Ollama & SQLite-vec. Find anything by meaning, not just keywords.
 				</p>
 			</section>
 
@@ -67,7 +67,7 @@ const SearchPage: React.FC = () => {
 						<div className="grid gap-4">
 							{results.map((result, i) => (
 								<motion.div
-									key={i}
+									key={result.id}
 									initial={{ opacity: 0, x: -20 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ delay: i * 0.05 }}
@@ -87,7 +87,7 @@ const SearchPage: React.FC = () => {
 													key={k}
 													className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-400"
 												>
-													{k}: {v}
+													{k}: {typeof v === 'object' ? JSON.stringify(v) : String(v)}
 												</span>
 											))}
 										</div>
@@ -104,7 +104,7 @@ const SearchPage: React.FC = () => {
 							animate={{ opacity: 1 }}
 							className="flex flex-col items-center justify-center py-20 text-slate-600 space-y-4"
 						>
-							<div className="p-2 md:p-4 bg-white/[0.02] rounded-full border border-white/5">
+							<div className="p-2 md:p-4 bg-white/2 rounded-full border border-white/5">
 								<History size={48} className="w-10 h-10 md:w-12 md:h-12" strokeWidth={1} />
 							</div>
 							<p className="font-medium text-sm md:text-base">No results found or no query entered.</p>

@@ -26,7 +26,11 @@ const AddPage: React.FC = () => {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					content,
-					metadata: project ? { project } : {},
+					contentType: 'text',
+					metadata: {
+						project: project || 'general',
+						source: 'ui',
+					},
 				}),
 			});
 
