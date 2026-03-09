@@ -53,6 +53,7 @@ export class VectorStore {
 		// Join with memories table to get metadata and content
 		const k = limit || config.DEFAULT_SEARCH_LIMIT;
 
+		const isGlobal = projectName === 'all' || !projectName;
 		const query = `
             SELECT 
                 m.id,
@@ -62,14 +63,16 @@ export class VectorStore {
             FROM memories_vec v
             JOIN memories m ON v.id = m.id
             WHERE v.embedding MATCH ?
-              AND m.project = ?
+              ${isGlobal ? '' : 'AND m.project = ?'}
               AND k = ?
             ORDER BY v.distance ASC
         `;
 
-		const results = db
-			.prepare(query)
-			.all(Buffer.from(new Float32Array(queryEmbedding).buffer), projectName, k) as any[];
+		const params = [Buffer.from(new Float32Array(queryEmbedding).buffer)];
+		if (!isGlobal) params.push(projectName as any);
+		params.push(k as any);
+
+		const results = db.prepare(query).all(...params) as any[];
 
 		return {
 			ids: [results.map((r) => r.id)],
