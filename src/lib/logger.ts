@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { format } from 'node:util';
 
 import { config } from '../config.js';
 
@@ -20,11 +21,11 @@ class LoggerClient {
 	private readonly interval: any; // Using any to avoid NodeJS.Timeout issues without @types/node in some environments
 	private flushing = false;
 
-	private readonly origLog = console.log;
-	private readonly origWarn = console.warn;
-	private readonly origError = console.error;
-	private readonly origInfo = console.info;
-	private readonly origDebug = console.debug;
+	private readonly origLog = console.log.bind(console);
+	private readonly origWarn = console.warn.bind(console);
+	private readonly origError = console.error.bind(console);
+	private readonly origInfo = console.info.bind(console);
+	private readonly origDebug = console.debug.bind(console);
 
 	constructor() {
 		// Ensure fallback directory exists
@@ -34,24 +35,44 @@ class LoggerClient {
 
 		// Override console methods to capture all logs
 		console.log = (...args: any[]) => {
-			this.origLog(...args);
-			this.queue('info', args);
+			try {
+				this.origLog(...args);
+				this.queue('info', args);
+			} catch (e) {
+				this.origLog('Error in console.log override:', e);
+			}
 		};
 		console.info = (...args: any[]) => {
-			this.origInfo(...args);
-			this.queue('info', args);
+			try {
+				this.origInfo(...args);
+				this.queue('info', args);
+			} catch (e) {
+				this.origLog('Error in console.info override:', e);
+			}
 		};
 		console.warn = (...args: any[]) => {
-			this.origWarn(...args);
-			this.queue('warn', args);
+			try {
+				this.origWarn(...args);
+				this.queue('warn', args);
+			} catch (e) {
+				this.origLog('Error in console.warn override:', e);
+			}
 		};
 		console.error = (...args: any[]) => {
-			this.origError(...args);
-			this.queue('error', args);
+			try {
+				this.origError(...args);
+				this.queue('error', args);
+			} catch (e) {
+				this.origLog('Error in console.error override:', e);
+			}
 		};
 		console.debug = (...args: any[]) => {
-			this.origDebug(...args);
-			this.queue('debug', args);
+			try {
+				this.origDebug(...args);
+				this.queue('debug', args);
+			} catch (e) {
+				this.origLog('Error in console.debug override:', e);
+			}
 		};
 
 		this.interval = setInterval(() => {
@@ -94,16 +115,20 @@ class LoggerClient {
 	}
 
 	private queue(level: LogLevel, args: any[]) {
-		const message = args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+		try {
+			const message = format(...args);
 
-		this.logs.push({
-			level,
-			timestamp: new Date().toISOString(),
-			message,
-		});
+			this.logs.push({
+				level,
+				timestamp: new Date().toISOString(),
+				message,
+			});
 
-		if (this.logs.length > 5000) {
-			this.logs = this.logs.slice(-1000);
+			if (this.logs.length > 5000) {
+				this.logs = this.logs.slice(-1000);
+			}
+		} catch (e) {
+			this.origLog('Failed to queue log:', e);
 		}
 	}
 

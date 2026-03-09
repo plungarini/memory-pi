@@ -26,12 +26,14 @@ fastify.register(searchRoutes, { prefix: '/api' });
 fastify.register(projectRoutes, { prefix: '/api' });
 fastify.register(healthRoutes); // /health at root level
 
-// Static files for React UI
-const publicPath = path.join(__dirname, 'public');
+// Static files for React UI - resolving path from project root to be safe for both tsx/src and node/dist
+const publicPath = path.resolve(__dirname, '..', 'dist', 'public');
+logger.info(`Serving static files from: ${publicPath}`);
+
 fastify.register(fastifyStatic, {
 	root: publicPath,
 	prefix: '/',
-	decorateReply: false,
+	decorateReply: true,
 });
 
 // SPA fallback - serve index.html for non-api/non-health routes
@@ -40,6 +42,22 @@ fastify.setNotFoundHandler((req, reply) => {
 		return reply.sendFile('index.html');
 	}
 	reply.status(404).send({ error: 'Not Found' });
+});
+
+fastify.setErrorHandler((error: any, request, reply) => {
+	logger.error('Unhandled Error:', {
+		message: error.message,
+		stack: error.stack,
+		url: request.url,
+		method: request.method,
+		body: request.body,
+	});
+	reply.status(500).send({
+		statusCode: 500,
+		error: 'Internal Server Error',
+		message: error.message,
+		stack: config.ENV === 'development' ? error.stack : undefined,
+	});
 });
 
 // Graceful shutdown

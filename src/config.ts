@@ -9,8 +9,7 @@ const configSchema = z.object({
 	API_KEY: z.string().optional(),
 
 	BASE_STORAGE_PATH: z.string().default('./data'),
-	CHROMA_PATH: z.string().optional(),
-	CHROMA_URL: z.string().optional(),
+	DB_PATH: z.string().optional(),
 	PROMPT_PATH: z.string().optional(),
 
 	LOG_FALLBACK_PATH: z.string().optional(),
@@ -35,6 +34,7 @@ const configSchema = z.object({
 	MAX_SEARCH_LIMIT: z.coerce.number().default(50),
 	DISK_WARN_THRESHOLD_GB: z.coerce.number().default(10),
 	PROMPT_HOT_RELOAD: z.preprocess((val) => val === 'true', z.boolean()).default(false),
+	NODE_ENV: z.string().default('development'),
 });
 
 const parsed = configSchema.safeParse(process.env);
@@ -52,7 +52,8 @@ const resolvePath = (p: string | undefined, defaultSuffix: string) =>
 
 export const config = {
 	...baseConfig,
-	CHROMA_PATH: resolvePath(baseConfig.CHROMA_PATH, 'chroma'),
+	DB_PATH: resolvePath(baseConfig.DB_PATH, 'memory-pi.db'),
 	PROMPT_PATH: resolvePath(baseConfig.PROMPT_PATH, 'prompts'),
 	LOG_FALLBACK_PATH: resolvePath(baseConfig.LOG_FALLBACK_PATH, 'logs'),
+	ENV: baseConfig.NODE_ENV,
 };
