@@ -66,6 +66,11 @@
 	.badge {
 		@apply px-2.5 py-0.5 rounded-full text-xs font-semibold border;
 	}
+
+	.glass-card-premium {
+		@apply bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)];
+		@apply transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20;
+	}
 }
 
 /* Custom Scrollbar */
