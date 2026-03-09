@@ -139,12 +139,20 @@ function tryCompileFromSource(version) {
 
 		const compiledSo = path.join(buildDir, 'vec0.so');
 		const srcDir = path.dirname(srcFile);
+		// better-sqlite3 bundles full SQLite headers (sqlite3.h, sqlite3ext.h)
+		const sqliteHeaderDir = path.join(process.cwd(), 'node_modules', 'better-sqlite3', 'deps', 'sqlite3');
+		if (!fs.existsSync(path.join(sqliteHeaderDir, 'sqlite3ext.h'))) {
+			throw new Error('sqlite3ext.h not found in better-sqlite3. Run npm install first.');
+		}
 		console.log(`  Compiling ${srcFile}...`);
-		// -I srcDir ensures gcc can find sqlite3ext.h bundled in the amalgamation
-		// -DSQLITE_VEC_ENABLE_NEON enables ARM NEON SIMD optimisations
-		execSync(`gcc -O2 -fPIC -shared -I "${srcDir}" -DSQLITE_VEC_ENABLE_NEON "${srcFile}" -o "${compiledSo}"`, {
-			stdio: 'inherit',
-		});
+		console.log(`  Using SQLite headers from: ${sqliteHeaderDir}`);
+		// -I srcDir:       finds sqlite-vec.h from the amalgamation
+		// -I sqliteHeaders: finds sqlite3ext.h and sqlite3.h from better-sqlite3
+		// -DSQLITE_VEC_ENABLE_NEON: enables ARM NEON SIMD optimisations
+		execSync(
+			`gcc -O2 -fPIC -shared -I "${srcDir}" -I "${sqliteHeaderDir}" -DSQLITE_VEC_ENABLE_NEON "${srcFile}" -o "${compiledSo}"`,
+			{ stdio: 'inherit' },
+		);
 
 		installSo(compiledSo, version);
 		cleanup(tarball, buildDir);
