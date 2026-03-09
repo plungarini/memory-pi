@@ -30,9 +30,6 @@ export class Distiller {
 							{ role: 'user', content: content },
 						],
 						response_format: { type: 'json_object' },
-						provider: {
-							prompt_caching: true,
-						},
 					}),
 				});
 
