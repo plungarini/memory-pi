@@ -21,9 +21,7 @@ This module enables other services in the ecosystem to persist and retrieve sema
     - **Ollama** (via official script or winget)
     - **ChromaDB** (via pip)
     - **nomic-embed-text model**
-3.  **Start Services**:
-    - Start ChromaDB: `chroma run --path ./data/chroma` (ensure it's in your PATH)
-    - Start Ollama (if not already running)
-4.  **Build and Start**: `npm run build && npm start`
+3.  **Start Everything**: `npm start`
+    - This will automatically launch **ChromaDB**, **Ollama**, the **Backend server**, and the **Admin UI** concurrently.
 
 The Admin UI will be available at `http://localhost:3002`.

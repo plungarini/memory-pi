@@ -104,10 +104,13 @@ async function setupEnvironment() {
 	const lines = exampleEnv.split('\n');
 
 	for (const line of lines) {
-		if (!line || line.startsWith('#')) continue;
-		const [key, exampleValue] = line.split('=');
+		const trimmedLine = line.trim();
+		if (!trimmedLine || trimmedLine.startsWith('#')) continue;
+
+		const [key, ...valueParts] = trimmedLine.split('=');
 		const trimmedKey = key.trim();
-		const defaultValue = env[trimmedKey] || (exampleValue ? exampleValue.trim() : '');
+		const exampleValue = valueParts.join('=').trim();
+		const defaultValue = env[trimmedKey] || exampleValue;
 
 		if (!env[trimmedKey]) {
 			if (defaultValue && !defaultValue.startsWith('your_')) {
@@ -129,7 +132,8 @@ async function setupEnvironment() {
 
 async function provisionInfrastructure() {
 	// 1. Install Ollama
-	if (!(await checkCommand('ollama'))) {
+	const ollamaExists = await checkCommand('ollama');
+	if (!ollamaExists) {
 		console.log('🤖 Ollama not found. Starting automated installation...');
 		await installOllama();
 		if (!isWindows) {
@@ -179,8 +183,8 @@ async function onboard() {
 	}
 
 	console.log('\n🎉 Onboarding complete! memory-pi is ready.');
-	console.log('👉 Start Chroma server: chroma run --path ./data/chroma');
-	console.log('👉 Start memory-pi: npm run dev\n');
+	console.log('👉 Start everything with one zero-touch command (Chroma, Ollama, API, UI):');
+	console.log('   npm start\n');
 
 	rl.close();
 }
