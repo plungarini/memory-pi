@@ -28,6 +28,12 @@ db.exec(`
 // Vector table for semantic search (using sqlite-vec)
 try {
 	const sqliteVec = require('sqlite-vec');
+	console.log(`[DEBUG] sqlite-vec resolved to: ${require.resolve('sqlite-vec')}`);
+	try {
+		console.log(`[DEBUG] sqlite-vec getLoadablePath() = ${sqliteVec.getLoadablePath()}`);
+	} catch (inner) {
+		console.error(`[DEBUG] sqlite-vec getLoadablePath() threw:`, inner);
+	}
 	sqliteVec.load(db);
 
 	db.exec(`
