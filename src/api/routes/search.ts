@@ -38,9 +38,10 @@ export default async function searchRoutes(fastify: FastifyInstance, options: Fa
 				return reply.status(400).send({ error: 'query_q_required' });
 			}
 
-			if (!project && config.COLLECTION_STRATEGY === 'per-project') {
-				return reply.status(400).send({ error: 'project_required_in_per_project_mode' });
-			}
+			// Allow searching globally even in per-project mode if no project is specified
+			// if (!project && config.COLLECTION_STRATEGY === 'per-project') {
+			// 	return reply.status(400).send({ error: 'project_required_in_per_project_mode' });
+			// }
 
 			// 1. Embed query
 			const queryEmbedding = await embedder.embed(q);
