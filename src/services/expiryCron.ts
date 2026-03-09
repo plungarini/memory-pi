@@ -7,7 +7,7 @@ export function setupExpiryCron() {
 	// Default: every day at 3 AM
 	const schedule = config.EXPIRY_CRON || '0 3 * * *';
 
-	cron.schedule(schedule, async () => {
+	return cron.schedule(schedule, async () => {
 		logger.info('Running expired items cleanup...');
 
 		try {

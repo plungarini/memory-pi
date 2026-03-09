@@ -1,45 +1,65 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpDown, Database, Filter } from 'lucide-react';
-import { api } from '../services/api';
+import { motion } from 'framer-motion';
+import { ChevronRight, Database, Folder, Loader2 } from 'lucide-react';
+import React from 'react';
 
-const BrowsePage = () => {
-	const { data: projectsData } = useQuery({
+const BrowsePage: React.FC = () => {
+	const { data, isLoading } = useQuery({
 		queryKey: ['projects'],
-		queryFn: () => api.getProjects(),
+		queryFn: async () => {
+			const res = await fetch('/api/projects');
+			return res.json();
+		},
 	});
+
+	const projects = data?.projects || [];
 
 	return (
 		<div className="space-y-8">
-			<header>
-				<h2 className="text-3xl font-bold text-white mb-2">Browse Store</h2>
-				<p className="text-secondary">Audit and inspect all stored namespaces</p>
-			</header>
+			<section className="space-y-2">
+				<h2 className="text-3xl font-bold text-white">Browse Memory</h2>
+				<p className="text-slate-400">Explore all memory namespaces and projects stored in the vector database.</p>
+			</section>
 
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				{projectsData?.projects.map((project) => (
-					<div
-						key={project}
-						className="glass-card p-6 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group"
-					>
-						<div className="flex items-center gap-4">
-							<div className="p-3 bg-primary/10 text-primary rounded-xl group-hover:scale-110 transition-transform">
-								<Database size={24} />
+			{isLoading ? (
+				<div className="flex flex-col items-center justify-center py-20 text-slate-500">
+					<Loader2 className="animate-spin mb-4" size={32} />
+					<p>Loading projects...</p>
+				</div>
+			) : projects.length > 0 ? (
+				<div className="grid gap-4 sm:grid-cols-2">
+					{projects.map((project: string, i: number) => (
+						<motion.div
+							key={project}
+							initial={{ opacity: 0, scale: 0.95 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ delay: i * 0.05 }}
+							className="glass-card p-6 flex items-center justify-between group cursor-pointer"
+						>
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
+									<Folder className="text-slate-400 group-hover:text-primary transition-colors" size={24} />
+								</div>
+								<div>
+									<h4 className="text-lg font-bold text-white group-hover:text-primary transition-colors">{project}</h4>
+									<p className="text-xs text-slate-500 font-mono">projects/{project}</p>
+								</div>
 							</div>
-							<div>
-								<h3 className="text-lg font-bold text-white">{project}</h3>
-							</div>
-						</div>
-						<div className="text-right">
-							<ArrowUpDown size={18} className="text-white/10" />
-						</div>
+							<ChevronRight
+								className="text-slate-700 group-hover:text-primary transition-transform group-hover:translate-x-1"
+								size={20}
+							/>
+						</motion.div>
+					))}
+				</div>
+			) : (
+				<div className="text-center py-20 border-2 border-dashed border-white/5 rounded-3xl space-y-4">
+					<div className="p-4 bg-white/[0.02] inline-block rounded-full">
+						<Database size={48} className="text-slate-700" />
 					</div>
-				))}
-			</div>
-
-			<div className="flex flex-col items-center justify-center py-20 bg-black/20 rounded-3xl border border-dashed border-white/5">
-				<Filter size={48} className="text-white/5 mb-4" />
-				<p className="text-secondary">Select a project above to browse its content</p>
-			</div>
+					<div className="text-slate-500">No projects found. Add your first memory to create a project.</div>
+				</div>
+			)}
 		</div>
 	);
 };

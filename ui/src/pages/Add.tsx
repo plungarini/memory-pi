@@ -1,193 +1,120 @@
-import { File as FileIcon, FileText, Image as ImageIcon, Loader2, Music, Sparkles } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { motion } from 'framer-motion';
+import { FileText, Hash, Loader2, Save, Sparkles } from 'lucide-react';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import { twMerge } from 'tailwind-merge';
 
-const AddPage = () => {
-	const navigate = useNavigate();
-	const [loading, setLoading] = useState(false);
-	const [formData, setFormData] = useState({
-		content: '',
-		contentType: 'text',
-		project: '',
-		source: 'manual-entry',
-		tags: '',
-		importance: 0.5,
-	});
+function cn(...inputs: ClassValue[]) {
+	return twMerge(clsx(inputs));
+}
 
-	const handleSubmit = async (e: React.FormEvent) => {
+const AddPage: React.FC = () => {
+	const [content, setContent] = useState('');
+	const [project, setProject] = useState('');
+	const [isSaving, setIsSaving] = useState(false);
+	const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+	const handleAdd = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
+		if (!content.trim()) return;
+
+		setIsSaving(true);
+		setStatus('idle');
 		try {
-			await api.addMemory({
-				...formData,
-				tags: formData.tags
-					.split(',')
-					.map((t) => t.trim())
-					.filter(Boolean),
-				metadata: {
-					project: formData.project,
-					source: formData.source,
-					importance: Number.parseFloat(formData.importance as any),
-				},
+			const res = await fetch('/api/memory', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					content,
+					metadata: project ? { project } : {},
+				}),
 			});
-			navigate('/');
+
+			if (res.ok) {
+				setStatus('success');
+				setContent('');
+				setProject('');
+				setTimeout(() => setStatus('idle'), 3000);
+			} else {
+				setStatus('error');
+			}
 		} catch (err) {
-			alert('Failed to add memory');
+			console.error('Save failed:', err);
+			setStatus('error');
 		} finally {
-			setLoading(false);
+			setIsSaving(false);
 		}
 	};
 
-	const types = [
-		{ id: 'text', icon: FileText, label: 'Text' },
-		{ id: 'image', icon: ImageIcon, label: 'Image' },
-		{ id: 'audio', icon: Music, label: 'Audio' },
-		{ id: 'pdf', icon: FileIcon, label: 'PDF' },
-	];
-
 	return (
-		<div className="max-w-3xl space-y-8">
-			<header>
-				<h2 className="text-3xl font-bold text-white mb-2">Add New Memory</h2>
-				<p className="text-secondary">Manually inject knowledge into the ecosystem</p>
-			</header>
+		<div className="max-w-2xl mx-auto space-y-8">
+			<section className="text-center space-y-2">
+				<div className="inline-flex p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary mb-2">
+					<Sparkles size={24} />
+				</div>
+				<h2 className="text-3xl font-bold text-white">Capture Knowledge</h2>
+				<p className="text-slate-400">
+					Add a new memory to the vector store. It will be automatically indexed and ready for semantic lookup.
+				</p>
+			</section>
 
-			<form onSubmit={handleSubmit} className="space-y-6">
-				<div className="glass-card p-8 space-y-6">
-					{/* Content Type Selector */}
-					<div>
-						<label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-4">Content Type</label>
-						<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-							{types.map((t) => (
-								<button
-									key={t.id}
-									type="button"
-									onClick={() => setFormData({ ...formData, contentType: t.id })}
-									className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${
-										formData.contentType === t.id
-											? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10'
-											: 'bg-black/20 border-white/5 text-secondary hover:border-white/10 hover:bg-black/30'
-									}`}
-								>
-									<t.icon size={24} className="mb-2" />
-									<span className="text-sm font-medium">{t.label}</span>
-								</button>
-							))}
-						</div>
-					</div>
-
-					<div>
-						<label
-							htmlFor="raw-content"
-							className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2"
-						>
-							Content
-						</label>
-						<textarea
-							id="raw-content"
-							required
-							className="input-field w-full min-h-[200px] py-4 resize-none"
-							placeholder={
-								formData.contentType === 'text' ? 'Paste your text here...' : 'Paste base64 encoded data here...'
-							}
-							value={formData.content}
-							onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-						/>
-					</div>
-
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div>
-							<label
-								htmlFor="project-name"
-								className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2"
-							>
-								Project Name
-							</label>
-							<input
-								id="project-name"
-								required
-								type="text"
-								className="input-field w-full"
-								placeholder="e.g. general-knowledge"
-								value={formData.project}
-								onChange={(e) => setFormData({ ...formData, project: e.target.value })}
-							/>
-						</div>
-						<div>
-							<label
-								htmlFor="source-name"
-								className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2"
-							>
-								Source
-							</label>
-							<input
-								id="source-name"
-								type="text"
-								className="input-field w-full"
-								value={formData.source}
-								onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-							/>
-						</div>
-					</div>
-
-					<div>
-						<label
-							htmlFor="tags-input"
-							className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2"
-						>
-							Tags (CSV)
-						</label>
-						<input
-							id="tags-input"
-							type="text"
-							className="input-field w-full"
-							placeholder="news, economics, fed..."
-							value={formData.tags}
-							onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-						/>
-					</div>
-
-					<div>
-						<div className="flex justify-between items-center mb-2">
-							<label className="block text-sm font-bold uppercase tracking-wider text-secondary">Importance</label>
-							<span className="text-accent font-mono text-sm">{formData.importance}</span>
-						</div>
-						<input
-							type="range"
-							min="0"
-							max="1"
-							step="0.1"
-							className="w-full h-2 bg-white/5 rounded-lg appearance-none cursor-pointer accent-primary"
-							value={formData.importance}
-							onChange={(e) => setFormData({ ...formData, importance: Number.parseFloat(e.target.value) })}
-						/>
-					</div>
+			<form onSubmit={handleAdd} className="space-y-6">
+				<div className="space-y-2">
+					<label className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
+						<FileText size={14} />
+						Content
+					</label>
+					<textarea
+						value={content}
+						onChange={(e) => setContent(e.target.value)}
+						placeholder="What would you like to store in the long-term memory?"
+						className="w-full min-h-[200px] bg-surface/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-white placeholder:text-slate-600 focus:ring-4 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all shadow-xl resize-none leading-relaxed"
+					/>
 				</div>
 
-				<div className="flex justify-end gap-4">
-					<button
-						type="button"
-						onClick={() => navigate('/')}
-						className="px-6 py-3 text-secondary hover:text-white transition-colors"
-					>
-						Cancel
-					</button>
-					<button
-						type="submit"
-						disabled={loading}
-						className="btn-primary flex items-center gap-2 min-w-[160px] justify-center disabled:opacity-50"
-					>
-						{loading ? (
-							<Loader2 className="animate-spin" size={20} />
-						) : (
-							<>
-								<Sparkles size={18} />
-								<span>Distill & Save</span>
-							</>
-						)}
-					</button>
+				<div className="space-y-2">
+					<label className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
+						<Hash size={14} />
+						Project / Category (Optional)
+					</label>
+					<input
+						type="text"
+						value={project}
+						onChange={(e) => setProject(e.target.value)}
+						placeholder="e.g. general, work, personal"
+						className="w-full bg-surface/40 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-white placeholder:text-slate-600 focus:ring-4 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all shadow-xl"
+					/>
 				</div>
+
+				<button
+					type="submit"
+					disabled={isSaving || !content.trim()}
+					className={cn(
+						'w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-2xl',
+						status === 'success' ? 'bg-success text-white' : 'bg-primary hover:bg-primary-dark text-white',
+					)}
+				>
+					{isSaving ? (
+						<Loader2 className="animate-spin" size={24} />
+					) : status === 'success' ? (
+						<>Successfully Saved!</>
+					) : (
+						<>
+							<Save size={20} />
+							Save to Memory
+						</>
+					)}
+				</button>
+
+				{status === 'error' && (
+					<motion.p
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						className="text-error text-center text-sm font-medium"
+					>
+						Failed to save memory. Please check if the services are running.
+					</motion.p>
+				)}
 			</form>
 		</div>
 	);

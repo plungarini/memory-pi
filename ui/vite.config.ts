@@ -6,6 +6,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
 	server: {
+		port: 3002,
+		strictPort: true,
 		proxy: {
 			'/api': 'http://localhost:3002',
 			'/health': 'http://localhost:3002',

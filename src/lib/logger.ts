@@ -122,14 +122,11 @@ class LoggerClient {
 			});
 
 			if (!response.ok) {
-				// Handle non-2xx response as a failure to log, falling back to disk
-				this.origError(`Logger-pi error (${response.status}) - falling back to disk`);
 				this.writeToFallback(batch);
 				this.requeue(batch);
 			}
 		} catch (err) {
-			// Handle network error (fetch throw)
-			this.origError('Logger-pi unreachable - falling back to disk', err);
+			// Handle network error (fetch throw) silently
 			this.writeToFallback(batch);
 			this.requeue(batch);
 		} finally {
