@@ -52,21 +52,6 @@ async function installOllama() {
 	}
 }
 
-async function installChromaDB() {
-	console.log('🌐 Installing ChromaDB via pip...');
-	try {
-		const pipCmd = (await checkCommand('pip3')) ? 'pip3' : 'pip';
-		execSync(`${pipCmd} install chromadb`, { stdio: 'inherit' });
-		return true;
-	} catch (e) {
-		console.error(
-			'❌ Failed to install ChromaDB via pip. Ensure Python/Pip are installed:',
-			e instanceof Error ? e.message : String(e),
-		);
-		return false;
-	}
-}
-
 async function waitForOllama(maxRetries = 20) {
 	console.log('⏳ Waiting for Ollama service to be ready...');
 	for (let i = 0; i < maxRetries; i++) {
@@ -148,10 +133,6 @@ async function provisionInfrastructure() {
 		console.log('✅ Ollama is already installed.');
 	}
 
-	// 2. Install ChromaDB
-	console.log('📊 Ensuring ChromaDB is installed...');
-	await installChromaDB();
-
 	// 3. Model Pulling
 	if (await waitForOllama()) {
 		console.log('🤖 Pulling embedding model (nomic-embed-text)...');
@@ -183,7 +164,7 @@ async function onboard() {
 	}
 
 	console.log('\n🎉 Onboarding complete! memory-pi is ready.');
-	console.log('👉 Start everything with one zero-touch command (Chroma, Ollama, API, UI):');
+	console.log('👉 Start everything with one zero-touch command (Ollama, API, UI):');
 	console.log('   npm start\n');
 
 	rl.close();
