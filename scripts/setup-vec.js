@@ -149,8 +149,9 @@ function tryCompileFromSource(version) {
 		// -I srcDir:       finds sqlite-vec.h from the amalgamation
 		// -I sqliteHeaders: finds sqlite3ext.h and sqlite3.h from better-sqlite3
 		// -DSQLITE_VEC_ENABLE_NEON: enables ARM NEON SIMD optimisations
+		// -flax-vector-conversions: fixes NEON vector type errors on strict GCC 14 (Raspberry Pi OS)
 		execSync(
-			`gcc -O2 -fPIC -shared -I "${srcDir}" -I "${sqliteHeaderDir}" -DSQLITE_VEC_ENABLE_NEON "${srcFile}" -o "${compiledSo}"`,
+			`gcc -O2 -fPIC -shared -flax-vector-conversions -I "${srcDir}" -I "${sqliteHeaderDir}" -DSQLITE_VEC_ENABLE_NEON "${srcFile}" -o "${compiledSo}"`,
 			{ stdio: 'inherit' },
 		);
 
