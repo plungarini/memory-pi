@@ -4,13 +4,35 @@ import { logger } from '../../lib/logger.js';
 import { embedder } from '../../services/embedder.js';
 import { vectorStore } from '../../services/vectorStore.js';
 
+const buildFilter = (query: any) => {
+	const { tags, minImportance, after, before } = query;
+	const filter: any = {};
+
+	if (tags) {
+		const tagList = Array.isArray(tags) ? tags : tags.split(',');
+		filter.tags = { $all: tagList };
+	}
+
+	if (minImportance) {
+		filter.importance = { $gte: Number.parseFloat(minImportance) };
+	}
+
+	if (after || before) {
+		filter.createdAt = {};
+		if (after) filter.createdAt['$gte'] = after;
+		if (before) filter.createdAt['$lte'] = before;
+	}
+
+	return filter;
+};
+
 export default async function searchRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
-	// GET /api/memory/search - Query memories
-	fastify.get('/memory/search', async (request, reply) => {
+	// GET /api/search - Query memories
+	fastify.get('/search', async (request, reply) => {
 		const query = request.query as any;
 
 		try {
-			const { q, project, limit, tags, minImportance, after, before, includeExpired } = query;
+			const { q, project, limit } = query;
 
 			if (!q) {
 				return reply.status(400).send({ error: 'query_q_required' });
@@ -24,22 +46,7 @@ export default async function searchRoutes(fastify: FastifyInstance, options: Fa
 			const queryEmbedding = await embedder.embed(q);
 
 			// 2. Build filters
-			const filter: any = {};
-
-			if (tags) {
-				const tagList = Array.isArray(tags) ? tags : tags.split(',');
-				filter.tags = { $all: tagList };
-			}
-
-			if (minImportance) {
-				filter.importance = { $gte: Number.parseFloat(minImportance) };
-			}
-
-			if (after || before) {
-				filter.createdAt = {};
-				if (after) filter.createdAt['$gte'] = after;
-				if (before) filter.createdAt['$lte'] = before;
-			}
+			const filter = buildFilter(query);
 
 			// 3. Search
 			const searchLimit = limit
@@ -51,9 +58,9 @@ export default async function searchRoutes(fastify: FastifyInstance, options: Fa
 			// 4. Transform results
 			const transformed = results.ids[0].map((id, i) => ({
 				id,
-				text: results.documents[0]![i],
-				score: results.distances ? 1 - results.distances[0]![i] : undefined, // Assuming cosine distance
-				metadata: results.metadatas[0]![i],
+				content: results.documents[0][i],
+				score: results.distances ? 1 - results.distances[0][i] : undefined, // Assuming cosine distance
+				metadata: results.metadatas[0][i],
 			}));
 
 			return {

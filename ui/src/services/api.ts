@@ -19,7 +19,7 @@ export const api = {
 			if (value !== undefined && value !== '') searchParams.append(key, String(value));
 		});
 
-		const response = await fetch(`/api/memory/search?${searchParams.toString()}`);
+		const response = await fetch(`/api/search?${searchParams.toString()}`);
 		if (!response.ok) throw new Error('Search failed');
 		return response.json();
 	},
@@ -35,8 +35,18 @@ export const api = {
 	},
 
 	async getProjects(): Promise<{ projects: string[] }> {
-		const response = await fetch('/api/memory/projects');
+		const response = await fetch('/api/projects');
 		if (!response.ok) throw new Error('Failed to fetch projects');
+		return response.json();
+	},
+
+	async getMemories(project: string, params: { limit?: number; offset?: number } = {}) {
+		const query = new URLSearchParams();
+		if (params.limit !== undefined) query.append('limit', String(params.limit));
+		if (params.offset !== undefined) query.append('offset', String(params.offset));
+
+		const response = await fetch(`/api/projects/${encodeURIComponent(project)}/memories?${query.toString()}`);
+		if (!response.ok) throw new Error('Failed to fetch memories');
 		return response.json();
 	},
 
