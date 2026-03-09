@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+dist/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build & Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.stylelintcache
+
+# Testing
+coverage/
+
+# Local Data Storage (ChromaDB, Logs, etc.)
+data/
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# UI Build Artifacts
+ui/dist/
+ui/node_modules/
