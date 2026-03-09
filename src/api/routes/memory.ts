@@ -14,7 +14,7 @@ export default async function memoryRoutes(fastify: FastifyInstance, options: Fa
 		const body = request.body as any;
 
 		try {
-			const { content, contentType, distillPrompt, metadata: rawMetadata } = body;
+			const { content, contentType = 'text', distillPrompt, metadata: rawMetadata } = body;
 
 			// 1. Validate metadata
 			const metadata = validateMetadata(rawMetadata);
