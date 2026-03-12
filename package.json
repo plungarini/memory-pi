@@ -52,11 +52,11 @@
     "ollama": "node scripts/start-service.js ollama 11434 \"ollama serve\"",
     "onboard": "node scripts/onboard.js",
     "setup:vec": "node scripts/setup-vec.js",
-    "start": "concurrently -k -p \"[{name}]\" -n \"OLLAMA,SERVER\" -c \"blue,green\" \"node scripts/start-service.js ollama 11434 \\\"ollama serve\\\"\" \"node dist/index.js\"",
+    "start": "npm run setup:vec && concurrently -k -p \"[{name}]\" -n \"OLLAMA,SERVER\" -c \"blue,green\" \"node scripts/start-service.js ollama 11434 \\\"ollama serve\\\"\" \"node dist/index.js\"",
     "start:dev": "npm run dev",
     "start:server": "node dist/index.js",
     "test": "vitest"
   },
   "type": "module",
-  "version": "1.15.0"
+  "version": "1.16.0"
 }
